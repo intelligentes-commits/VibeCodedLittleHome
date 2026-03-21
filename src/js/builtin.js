@@ -1,6 +1,6 @@
 const clock = async () => {
     const render = async () => {
-        const baseOffset = 109.12
+        const baseOffset = 100
         const tsp = number => (number < 10 ? `0${number}` : `${number}`).split('').map(e => parseInt(e)*baseOffset)
         const time = new Date()
         var ft = [tsp(time.getHours()), tsp(time.getMinutes()), tsp(time.getSeconds())].flat()
