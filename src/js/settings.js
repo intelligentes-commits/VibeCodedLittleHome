@@ -38,7 +38,7 @@ const settings = {
         Object.keys(settings.styles).map(
             key => {
                 const v = getFromStorage(`theme_${key}`)
-                if (!v) settings.set_style(key, settings.styles[key][0])
+                if (!v) settings.set_style(key, `11${settings.styles[key][3]}`)
                 else settings.set_style(key, v)
             }
         )
