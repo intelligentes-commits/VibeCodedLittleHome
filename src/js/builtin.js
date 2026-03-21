@@ -33,7 +33,7 @@ const clock = async () => {
         )
     )
     render()
-    setInterval(() => render(), 500);
+    setInterval(() => render(), 200);
 }
 
 
