@@ -26,11 +26,11 @@
 #searcher > h1 {
     font-family: 'Playfair Display';
     font-weight: normal;
-    font-size: 70px;
+    font-size: 60px;
     text-align: center;
 } #searcher > h1 > span {
     transition: background .2s;
-    font-size: 33px;
+    font-size: 23px;
     font-family: 'Fira Code';
     background: rgba(255,255,255,.1);
     padding: 0 5px 0;
