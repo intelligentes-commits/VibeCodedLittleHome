@@ -64,7 +64,7 @@ searcher = () => {
         const query = element.target.value.trim()
         const fb = findbang(query)
         const url = fb.valid ? fb.data.u : 'https://www.google.com/search?q={{{s}}}'
-        window.location.href = url.replace('{{{s}}}', encodeURI(fb.found ? query.replace('!'+fb.inputed, '').trim() : query.trim()))
+        window.location.href = url.replace('{{{s}}}', encodeURIComponent(fb.found ? query.replace('!'+fb.inputed, '').trim() : query.trim()))
     }
     document.querySelector('#search_ddd').addEventListener('change', find)
     document.querySelector('#search_ddd').addEventListener('input', (e) => {proceed(e.target.value.trim())})
