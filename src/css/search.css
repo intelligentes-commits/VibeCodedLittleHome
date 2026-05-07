@@ -7,8 +7,8 @@
 }
 
 #searcher {
-    background: rgba(0,0,0,.2);
-    transition: opacity .2s;
+    background: transparent;
+    transition: opacity 0.2s;
     opacity: 0;
     position: fixed;
     top: 0;
@@ -21,24 +21,192 @@
     align-items: center;
     justify-content: center;
     gap: 15px;
+    transition:
+        opacity 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+        filter 0.4s ease;
+
+    /* Начальное (скрытое) состояние */
+    opacity: 0;
+    transform: scale(1.05) translateY(-10px); /* Поиск чуть больше и выше */
+    filter: blur(5px);
+    pointer-events: none;
 }
 
-#searcher > h1 {
-    font-family: 'Playfair Display';
+#searchContent {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+#searchContent > h1 {
+    font-family: "Playfair Display";
     font-weight: normal;
     font-size: 60px;
     text-align: center;
-} #searcher > h1 > span {
-    transition: background .2s;
+    /* анимацию менять тута */
+    transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+    white-space: nowrap;
+}
+
+#searchContent > h1.no-transition {
+    transition: none !important;
+}
+
+#searchContent > h1 > span {
+    transition: background 0.2s;
     font-size: 23px;
-    font-family: 'Fira Code';
-    background: rgba(255,255,255,.1);
+    font-family: "Fira Code";
+    background: rgba(255, 255, 255, 0.1);
     padding: 0 5px 0;
     border-radius: 10px;
-    vertical-align:middle;
+    vertical-align: middle;
+}
 
-} #searcher > h1 > span.error {
-    background: rgba(255,100,100,.2);
-}  #searcher > p {
-    font-family: 'Nunito';
+#searchContent > h1 > span.error {
+    background: rgba(255, 100, 100, 0.2);
+}
+
+#searchContent > p {
+    font-family: "Nunito";
+}
+
+#searchContent > p strong {
+    font-weight: 700;
+}
+
+#searchSuggestions {
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 50%;
+    width: min(620px, calc(100vw - 48px));
+    display: grid;
+    align-content: start;
+    gap: 0;
+    font-family: "Nunito";
+    height: 416px;
+    opacity: 1;
+    overflow: hidden;
+    border: 1px solid rgba(20, 20, 24, 0.1);
+    border-radius: 12px;
+    background: rgba(245, 245, 245, 0.3);
+    backdrop-filter: blur(22px) saturate(1.08);
+    transform: translateX(-50%) translateY(0) scale(1);
+    transform-origin: top center;
+    filter: blur(0);
+    transition:
+        opacity 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+        filter 0.4s ease;
+}
+
+#searchSuggestions.hidden {
+    opacity: 0;
+    pointer-events: none;
+    filter: blur(10px);
+    transform: translateX(-50%) translateY(-18px) scale(0.92);
+}
+
+.searchSuggestion {
+    display: grid;
+    grid-template-columns: 86px 1fr;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+    min-height: 52px;
+    padding: 10px 14px;
+    border: 0;
+    border-bottom: 1px solid rgba(20, 20, 24, 0.08);
+    border-radius: 0;
+    background: transparent;
+    color: rgba(20, 20, 24, 0.92);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background 0.18s ease;
+}
+
+.searchSuggestion:last-child {
+    border-bottom: 0;
+}
+
+.searchSuggestion:hover,
+.searchSuggestion.selected {
+    background: rgba(255, 255, 255, 0.26);
+}
+
+.searchSuggestionType {
+    overflow: hidden;
+    font-family: "Fira Code";
+    font-size: 12px;
+    text-transform: uppercase;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(20, 20, 24, 0.5);
+    letter-spacing: 0;
+}
+
+.searchSuggestionText {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.searchSuggestionTitle,
+.searchSuggestionMeta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.searchSuggestionTitle {
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.searchSuggestionTitle mark {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font-weight: 650;
+}
+
+.searchSuggestionMeta {
+    font-size: 12px;
+    line-height: 1.2;
+    color: rgba(20, 20, 24, 0.48);
+}
+
+body.theme-dark #searchSuggestions {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+body.theme-dark .searchSuggestion {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.92);
+}
+
+body.theme-dark .searchSuggestion:hover,
+body.theme-dark .searchSuggestion.selected {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+body.theme-dark .searchSuggestionType,
+body.theme-dark .searchSuggestionMeta {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+body.theme-dark .searchSuggestionTitle mark {
+    color: inherit;
+}
+
+#searcher.active {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+    pointer-events: all;
 }

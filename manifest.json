@@ -5,7 +5,13 @@
     "description": "My personal homepage with bangs support",
     "permissions": [
         "activeTab",
+        "bookmarks",
+        "history",
+        "tabs",
         "storage"
+    ],
+    "host_permissions": [
+        "https://suggestqueries.google.com/*"
     ],
     "icons": {
         "48": "src/icon.svg"

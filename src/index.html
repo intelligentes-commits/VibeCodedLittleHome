@@ -1,25 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-    <link rel="shortcut icon" href="icon.svg" type="image/x-icon">
-    <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/settings.css">
-    <link rel="stylesheet" href="css/clock.css">
-    <link rel="stylesheet" href="css/search.css">
-    <link rel="stylesheet" href="css/update.css">
-</head>
-<body>
-    <div id="background"></div>
-    <div id="searcher">
-        <h1></h1>
-        <p>Search via Google</p>
-    </div>
-    <input type="text" id="search_ddd" autocorrect="off" autocomplete="off" autofocus>
-    <div id="settingsbutton"></div>
-    <!-- <div id="settingsui">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Home</title>
+        <script src="js/ntp-focus.js"></script>
+        <link rel="shortcut icon" href="icon.svg" type="image/x-icon" />
+        <link rel="stylesheet" href="css/global.css" />
+        <link rel="stylesheet" href="css/settings.css" />
+        <link rel="stylesheet" href="css/clock.css" />
+        <link rel="stylesheet" href="css/search.css" />
+        <link rel="stylesheet" href="css/update.css" />
+    </head>
+    <body tabindex="-1">
+        <div id="background"></div>
+        <div id="searcher">
+            <div id="searchContent">
+                <h1></h1>
+                <p>Search via Google</p>
+            </div>
+        </div>
+        <input
+            type="text"
+            id="search_ddd"
+            autocorrect="off"
+            autocomplete="off"
+            autofocus
+        />
+        <div id="settingsbutton"></div>
+        <!-- <div id="settingsui">
         <h2>Settings</h2>
         <h4>Color</h4>
         <input type="range" name="hue" id="s_hue" min="0" max="255" step="1">
@@ -28,13 +37,16 @@
         <h4>Range</h4>
         <input type="range" name="hue" id="s_hue" min="0" max="255" step="1">
     </div> -->
-    <div id="update" class="hidden"><span>update available</span> <a href="https://github.com/ktnk-dev/LittleHome">download</a></div>
-    <script src="js/abstract.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/bang.js"></script>
-    <script src="js/builtin.js"></script>
-    <script src="js/update.js"></script>
-    <script src="js/settings.js"></script>
-    <script src="js/main.js"></script>
-</body>
+        <div id="update" class="hidden">
+            <span>update available</span>
+            <a href="https://github.com/ktnk-dev/LittleHome">download</a>
+        </div>
+        <script src="js/abstract.js"></script>
+        <script src="js/storage.js"></script>
+        <script src="js/bang.js"></script>
+        <script src="js/builtin.js"></script>
+        <script src="js/update.js"></script>
+        <script src="js/settings.js"></script>
+        <script src="js/main.js"></script>
+    </body>
 </html>
