@@ -57,8 +57,10 @@ const getOrderedAiProviderBangs = () => {
   return getAiProviderBangs().sort((a, b) => {
     if (a.aiProviderKey === defaultKey) return -1;
     if (b.aiProviderKey === defaultKey) return 1;
-    return AI_PROVIDERS.findIndex((provider) => provider.key === a.aiProviderKey) -
-      AI_PROVIDERS.findIndex((provider) => provider.key === b.aiProviderKey);
+    return (
+      AI_PROVIDERS.findIndex((provider) => provider.key === a.aiProviderKey) -
+      AI_PROVIDERS.findIndex((provider) => provider.key === b.aiProviderKey)
+    );
   });
 };
 
@@ -128,7 +130,12 @@ const clock = async () => {
   );
   document
     .querySelector("body")
-    .appendChild($.div({ id: "idleHint" }, "начните печатать для поиска, пробел - промпт для ИИ"));
+    .appendChild(
+      $.div(
+        { id: "idleHint" },
+        "начните печатать для поиска, пробел - промпт для ИИ",
+      ),
+    );
   render();
   setInterval(() => render(), 200);
 };
@@ -206,7 +213,10 @@ searcher = () => {
       const hostname = url.hostname;
 
       if (!hostname.includes(".") && hostname !== "localhost") return null;
-      if (hostname.includes(".") && !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(hostname)) {
+      if (
+        hostname.includes(".") &&
+        !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(hostname)
+      ) {
         return null;
       }
 
@@ -246,10 +256,12 @@ searcher = () => {
       try {
         const result = api[method](...args);
         if (result && typeof result.then === "function") {
-          result.then((value) => resolve(value ?? [])).catch((error) => {
-            logSuggestionError(source, error);
-            resolve([]);
-          });
+          result
+            .then((value) => resolve(value ?? []))
+            .catch((error) => {
+              logSuggestionError(source, error);
+              resolve([]);
+            });
           return;
         }
       } catch {
@@ -341,7 +353,8 @@ searcher = () => {
 
   const getSuggestionLabel = (suggestion, context = searchContext) => {
     if (!suggestion) {
-      if (context.directUrl) return `open ${escapeHtml(getHost(context.directUrl))}`;
+      if (context.directUrl)
+        return `open ${escapeHtml(getHost(context.directUrl))}`;
       return searchLabel(
         context.fb?.valid ? context.fb.data.s : "Google",
         getCleanSearchQuery(context.query, context.fb),
@@ -351,7 +364,8 @@ searcher = () => {
     if (suggestion.type === "tab") return `switch to open tab`;
     if (suggestion.type === "history") return `open from history`;
     if (suggestion.type === "bookmark") return `open bookmark`;
-    if (suggestion.type === "url") return `open ${escapeHtml(getHost(suggestion.url))}`;
+    if (suggestion.type === "url")
+      return `open ${escapeHtml(getHost(suggestion.url))}`;
     if (suggestion.type === "ai") {
       return searchLabel(
         suggestion.provider.s,
@@ -364,7 +378,8 @@ searcher = () => {
         getCleanSearchQuery(context.query, context.fb),
       );
     }
-    if (suggestion.type === "search") return searchLabel("Google", suggestion.title);
+    if (suggestion.type === "search")
+      return searchLabel("Google", suggestion.title);
     return searchLabel("Google", context.query);
   };
 
@@ -390,7 +405,7 @@ searcher = () => {
     return {
       type: "ai",
       title: cleanedQuery || provider.s,
-      subtitle: cleanedQuery ? `Prompt ${provider.s}` : "AI assistant",
+      subtitle: `Prompt ${provider.s}`,
       highlight: cleanedQuery,
       provider,
     };
@@ -449,7 +464,10 @@ searcher = () => {
     ]);
 
     const filteredTabs = tabs
-      .filter((tab) => includesQuery(tab.title, query) || includesQuery(tab.url, query))
+      .filter(
+        (tab) =>
+          includesQuery(tab.title, query) || includesQuery(tab.url, query),
+      )
       .slice(0, 4)
       .map((tab) => ({
         type: "tab",
@@ -531,7 +549,9 @@ searcher = () => {
       .then((response) => (response.ok ? response.json() : []))
       .catch(() => []);
 
-    const searchTerms = Array.isArray(searchResponse[1]) ? searchResponse[1] : [];
+    const searchTerms = Array.isArray(searchResponse[1])
+      ? searchResponse[1]
+      : [];
     return searchTerms.slice(0, 5).map((term) => ({
       type: "search",
       title: term,
@@ -546,10 +566,7 @@ searcher = () => {
       fb.found ? [] : getSearchSuggestions(query),
     ]);
 
-    return uniqueSuggestions([
-      ...localSuggestions,
-      ...searchSuggestions,
-    ]);
+    return uniqueSuggestions([...localSuggestions, ...searchSuggestions]);
   };
 
   const renderSuggestions = (suggestions) => {
@@ -583,9 +600,15 @@ searcher = () => {
           { class: "searchSuggestionText" },
           $.span(
             { class: "searchSuggestionTitle" },
-            highlightMatch(suggestion.title, suggestion.highlight || searchContext.query),
+            highlightMatch(
+              suggestion.title,
+              suggestion.highlight || searchContext.query,
+            ),
           ),
-          $.span({ class: "searchSuggestionMeta" }, escapeHtml(suggestion.subtitle || "")),
+          $.span(
+            { class: "searchSuggestionMeta" },
+            escapeHtml(suggestion.subtitle || ""),
+          ),
         ),
       );
       suggestionsEl.appendChild(item);
@@ -597,12 +620,11 @@ searcher = () => {
   };
 
   const updateSelectedSuggestion = () => {
-    suggestionsEl.querySelectorAll(".searchSuggestion").forEach((item, index) => {
-      item.classList.toggle(
-        "selected",
-        index === selectedSuggestion,
-      );
-    });
+    suggestionsEl
+      .querySelectorAll(".searchSuggestion")
+      .forEach((item, index) => {
+        item.classList.toggle("selected", index === selectedSuggestion);
+      });
     updateSearchSubtitle();
   };
 
@@ -626,9 +648,15 @@ searcher = () => {
     if (suggestion.type === "tab") {
       if (!extensionApi?.windows || !extensionApi?.tabs) return false;
       if (window.__littleHomeStopNtpFocus) window.__littleHomeStopNtpFocus();
-      extensionCall("windows", extensionApi.windows, "update", suggestion.windowId, {
-        focused: true,
-      });
+      extensionCall(
+        "windows",
+        extensionApi.windows,
+        "update",
+        suggestion.windowId,
+        {
+          focused: true,
+        },
+      );
       extensionCall("tabs", extensionApi.tabs, "update", suggestion.tabId, {
         active: true,
       });
@@ -718,13 +746,17 @@ searcher = () => {
 
     getLocalSuggestions(query, fb, directUrl).then((localSuggestions) => {
       if (requestId === suggestionRequest) {
-        renderSuggestions(uniqueSuggestions([...localSuggestions, ...immediateSuggestions]));
+        renderSuggestions(
+          uniqueSuggestions([...localSuggestions, ...immediateSuggestions]),
+        );
       }
     });
 
     getSearchSuggestions(query).then((searchSuggestions) => {
       if (requestId === suggestionRequest) {
-        renderSuggestions(uniqueSuggestions([...renderedSuggestions, ...searchSuggestions]));
+        renderSuggestions(
+          uniqueSuggestions([...renderedSuggestions, ...searchSuggestions]),
+        );
       }
     });
   };
@@ -763,7 +795,11 @@ searcher = () => {
     if (e.key === "Backspace" && aiMode) {
       const query = e.target.value.trim();
       const fb = findbang(query);
-      if (fb.valid && isAiBang(fb.data) && getCleanSearchQuery(query, fb) === "") {
+      if (
+        fb.valid &&
+        isAiBang(fb.data) &&
+        getCleanSearchQuery(query, fb) === ""
+      ) {
         e.preventDefault();
         e.target.value = "";
         selectedSuggestion = 0;
@@ -786,7 +822,8 @@ searcher = () => {
 
     if (renderedSuggestions.length > 0 && e.key === "ArrowDown") {
       e.preventDefault();
-      selectedSuggestion = (selectedSuggestion + 1) % renderedSuggestions.length;
+      selectedSuggestion =
+        (selectedSuggestion + 1) % renderedSuggestions.length;
       selectionExplicit = true;
       updateSelectedSuggestion();
       return;

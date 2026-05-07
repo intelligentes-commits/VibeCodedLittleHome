@@ -111,9 +111,9 @@
 
 .searchSuggestion {
     display: grid;
-    grid-template-columns: 86px 1fr;
+    grid-template-columns: 74px 1fr;
     align-items: center;
-    gap: 18px;
+    gap: 12px;
     width: 100%;
     min-height: 52px;
     padding: 10px 14px;
