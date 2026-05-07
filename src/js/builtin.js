@@ -760,6 +760,20 @@ searcher = () => {
       return;
     }
 
+    if (e.key === "Backspace" && aiMode) {
+      const query = e.target.value.trim();
+      const fb = findbang(query);
+      if (fb.valid && isAiBang(fb.data) && getCleanSearchQuery(query, fb) === "") {
+        e.preventDefault();
+        e.target.value = "";
+        selectedSuggestion = 0;
+        selectionExplicit = false;
+        aiMode = false;
+        proceed("", true);
+        return;
+      }
+    }
+
     if (e.key === "Escape" && e.target.value.trim() !== "") {
       e.preventDefault();
       e.target.value = "";
