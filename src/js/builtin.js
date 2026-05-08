@@ -235,6 +235,7 @@ searcher = () => {
   var searchContext = { query: "", fb: null, directUrl: null };
   var tabsCache = [];
   var tabsCacheAt = 0;
+  var searchIdleTimer = null;
 
   const suggestionsEl = $.div({ id: "searchSuggestions", class: "hidden" });
   document.querySelector("#searchContent").appendChild(suggestionsEl);
@@ -435,6 +436,50 @@ searcher = () => {
     getOrderedAiProviderBangs().map((provider) =>
       createAiSuggestion(provider, query, fb),
     );
+
+  const getTextMeasureContext = (() => {
+    const canvas = document.createElement("canvas");
+    return canvas.getContext("2d");
+  })();
+
+  const splitQueryLines = (text, h1) => {
+    const style = getComputedStyle(h1);
+    const maxWidth = Math.min(1040, window.innerWidth - 48);
+    getTextMeasureContext.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+
+    const lines = [];
+    let line = "";
+
+    for (const char of Array.from(text)) {
+      const nextLine = `${line}${char}`;
+      if (
+        line !== "" &&
+        getTextMeasureContext.measureText(nextLine).width > maxWidth
+      ) {
+        lines.push(line);
+        line = char.trimStart();
+      } else {
+        line = nextLine;
+      }
+    }
+
+    if (line !== "") lines.push(line);
+    return lines.length > 0 ? lines : [""];
+  };
+
+  const renderQueryLines = (h1, text, { placeholder = false } = {}) => {
+    h1.innerHTML = "";
+    splitQueryLines(text, h1).forEach((line) => {
+      h1.appendChild(
+        $.span(
+          {
+            class: `queryLine${placeholder ? " placeholder" : ""}`,
+          },
+          escapeHtml(line),
+        ),
+      );
+    });
+  };
 
   const applyBangSuggestion = (bang) => {
     const searchInput = document.querySelector("#search_ddd");
@@ -660,6 +705,17 @@ searcher = () => {
     updateSearchSubtitle();
   };
 
+  const clearSearchVisuals = () => {
+    suggestionsEl.classList.add("hidden");
+    suggestionsEl.innerHTML = "";
+    renderedSuggestions = [];
+    selectedSuggestion = 0;
+    const h1 = document.querySelector("#searchContent > h1");
+    const p = document.querySelector("#searchContent > p");
+    h1.innerHTML = "";
+    p.innerHTML = searchLabel("Google", "");
+  };
+
   const runSuggestion = (suggestion) => {
     if (!suggestion) return false;
 
@@ -726,12 +782,23 @@ searcher = () => {
     const searchEl = document.querySelector("#searcher");
     const searchContentEl = document.querySelector("#searchContent");
 
+    if (searchIdleTimer) {
+      clearTimeout(searchIdleTimer);
+      searchIdleTimer = null;
+    }
+
     if (query === "") {
+      searchEl.classList.remove("active");
       clockEl.classList.remove("hidden");
       idleHintEl?.classList.remove("hidden");
-      searchEl.classList.remove("active");
-      searchEl.style.setProperty("--query-lift", "0px");
-      renderSuggestions([]);
+      suggestionsEl.classList.add("hidden");
+      searchIdleTimer = setTimeout(() => {
+        if (lastquery !== "") return;
+        searchEl.style.setProperty("--query-lift", "0px");
+        clearSearchVisuals();
+        searchIdleTimer = null;
+      }, 420);
+      return;
     } else {
       clockEl.classList.add("hidden");
       idleHintEl?.classList.add("hidden");
@@ -741,17 +808,23 @@ searcher = () => {
     const fb = findbang(query);
     searchContext = { query, fb, directUrl: null };
     let displayQuery = escapeHtml(query);
+    let queryLineText = null;
+    let queryLinePlaceholder = false;
     if (isAiSearchMode(fb)) {
       const aiQuery = getCleanSearchQuery(query, fb);
       displayQuery = aiQuery
         ? escapeHtml(aiQuery)
         : `<span class="placeholder">начните печатать</span>`;
+      queryLineText = aiQuery || "начните печатать";
+      queryLinePlaceholder = aiQuery === "";
     } else if (fb.found) {
       displayQuery = `${escapeHtml(query.slice(0, fb.start))}<span class="${
         fb.valid ? "" : "error"
       }">${escapeHtml(query.slice(fb.start, fb.end))}</span>${escapeHtml(
         query.slice(fb.end),
       )}`;
+    } else {
+      queryLineText = query;
     }
     const directUrl = fb.found ? null : getDirectUrl(query);
     searchContext.directUrl = directUrl;
@@ -761,23 +834,34 @@ searcher = () => {
 
     // --- НАЧАЛО АНИМАЦИИ ЦЕНТРИРОВАНИЯ ---
 
-    const oldWidth = h1.offsetWidth;
-    h1.innerHTML = displayQuery;
+    const oldLine = h1.querySelector(".queryLine:last-child");
+    const oldWidth = oldLine?.offsetWidth || h1.offsetWidth;
+    if (queryLineText === null) {
+      h1.innerHTML = displayQuery;
+    } else {
+      renderQueryLines(h1, queryLineText, {
+        placeholder: queryLinePlaceholder,
+      });
+    }
     p.innerHTML = getSuggestionLabel(null, searchContext);
-    const newWidth = h1.offsetWidth;
-    if (oldWidth !== 0 && newWidth !== 0 && oldWidth !== newWidth) {
+    const lineHeight =
+      parseFloat(getComputedStyle(h1).lineHeight) || h1.offsetHeight;
+    const lineCount =
+      h1.querySelectorAll(".queryLine").length ||
+      Math.max(1, Math.round(h1.offsetHeight / lineHeight));
+    const newLine = h1.querySelector(".queryLine:last-child");
+    const newWidth = newLine?.offsetWidth || h1.offsetWidth;
+    if (newLine && oldWidth !== 0 && newWidth !== 0 && oldWidth !== newWidth) {
       const deltaX = (newWidth - oldWidth) / 2;
-      h1.classList.add("no-transition");
-      h1.style.transform = `translateX(${deltaX}px)`;
-      void h1.offsetWidth;
-      h1.classList.remove("no-transition");
-      h1.style.transform = `translateX(0)`;
+      newLine.classList.add("no-transition");
+      newLine.style.transform = `translateX(${deltaX}px)`;
+      void newLine.offsetWidth;
+      newLine.classList.remove("no-transition");
+      newLine.style.transform = `translateX(0)`;
     } else {
       h1.style.transform = `translateX(0)`;
     }
 
-    const lineHeight = parseFloat(getComputedStyle(h1).lineHeight) || h1.offsetHeight;
-    const lineCount = Math.max(1, Math.round(h1.offsetHeight / lineHeight));
     const maxLift = Math.max(180, Math.round(window.innerHeight * 0.45));
     const lift = Math.min(maxLift, Math.max(0, lineCount - 1) * 30);
     searchEl.style.setProperty("--query-lift", `${lift}px`);

@@ -33,7 +33,7 @@
 
     /* Начальное (скрытое) состояние */
     opacity: 0;
-    transform: scale(1.05) translateY(-10px); /* Поиск чуть больше и выше */
+    transform: scale(0.96) translateY(8px);
     filter: blur(5px);
     pointer-events: none;
 }
@@ -67,6 +67,27 @@
 }
 
 #searchContent > h1.no-transition {
+    transition: none !important;
+}
+
+#searchContent > h1 > .queryLine {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+    background: transparent !important;
+    border-radius: 0 !important;
+    color: inherit;
+    font-family: "Playfair Display" !important;
+    font-size: 60px !important;
+    font-weight: normal !important;
+    padding: 0 !important;
+    transform: translateX(0);
+    transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+    white-space: pre-wrap;
+}
+
+#searchContent > h1 > .queryLine.no-transition {
     transition: none !important;
 }
 
