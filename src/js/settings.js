@@ -67,6 +67,15 @@ const settings = {
         const ret = name => parseInt(document.querySelector('#background').style.getPropertyValue(`--${name}`).trim().replace('%', ''))
         const setter = (name, trail = '') => (e) => settings.set_style(name, `${e.target.value}${trail}`)
         const state = (name, trail = '') => {return {value: ret(name), oninput: setter(name, trail)}}
+        const settingSection = (title, detail, ...children) => $.section(
+            {class: 'settingsSection'},
+            $.div(
+                {class: 'settingsSectionHeader'},
+                $.h3(title),
+                $.p(detail),
+            ),
+            ...children,
+        )
         const themeButton = theme => $.button(
             {
                 class: `themeOption ${settings.theme === theme ? 'selected' : ''}`,
@@ -91,29 +100,60 @@ const settings = {
                 },
                 'data-provider': provider.key,
             },
-            provider.s
+            $.span({class: 'optionTitle'}, provider.s),
+            $.span({class: 'optionMeta'}, new URL(provider.u).hostname.replace(/^www\./, '')),
         )
+        const rangeControl = key => {
+            const d = settings.styles[key]
+            return $.label(
+                {class: 'rangeControl'},
+                $.span({class: 'rangeLabel'}, d[2]),
+                $.input({type: 'range', min: d[0], max: d[1], ...state(key, d[3])})
+            )
+        }
         const ui = $.div(
             {id: 'settingsui'},
-            $.h2('Settings'),
-            $.h4('Theme'),
             $.div(
-                {class: 'themeSwitch'},
-                themeButton('light'),
-                themeButton('dark'),
+                {class: 'settingsPanelHeader'},
+                $.div(
+                    $.h2('Settings'),
+                    $.p('LittleHome'),
+                ),
+                $.button(
+                    {
+                        class: 'settingsClose',
+                        type: 'button',
+                        onclick: () => settings.close(),
+                        'aria-label': 'Close settings',
+                    },
+                    settings.icons.close,
+                ),
             ),
-            $.h4('AI'),
             $.div(
-                {class: 'aiSwitch'},
-                ...(window.LittleHomeAI?.providers || []).map(provider => aiProviderButton(provider)),
+                {class: 'settingsPanelBody'},
+                settingSection(
+                    'Theme',
+                    'Choose the page surface.',
+                    $.div(
+                        {class: 'themeSwitch'},
+                        themeButton('light'),
+                        themeButton('dark'),
+                    ),
+                ),
+                settingSection(
+                    'AI provider',
+                    'Used when search starts with Space.',
+                    $.div(
+                        {class: 'aiSwitch'},
+                        ...(window.LittleHomeAI?.providers || []).map(provider => aiProviderButton(provider)),
+                    ),
+                ),
+                settingSection(
+                    'Gradient',
+                    'Tweak the sinya background.',
+                    ...Object.keys(settings.styles).map(key => rangeControl(key)),
+                ),
             ),
-            ...Object.keys(settings.styles).map(key => {
-                const d = settings.styles[key]
-                return $.div(
-                    $.h4(d[2]),
-                    $.input({type: 'range', min: d[0], max: d[1], ...state(key, d[3])})
-                )
-            })
         )
         document.body.appendChild(ui)
         requestAnimationFrame(() => ui.classList.add('open'))

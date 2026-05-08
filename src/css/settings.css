@@ -1,25 +1,28 @@
 #settingsbutton {
     z-index: 11;
     position: fixed;
-    bottom: 5px;
-    left: 5px;
+    bottom: 8px;
+    left: 8px;
     cursor: pointer;
+}
 
-    svg {
-        transition: background 0.2s;
-        border-radius: 100px;
-        padding: 5px;
-        width: 20px !important;
-        height: 20px !important;
-        fill: rgba(0, 0, 0, 0.22) !important;
-    }
-    svg:hover {
-        background: rgba(0, 0, 0, 0.06);
-    }
+#settingsbutton svg {
+    transition:
+        background 0.2s ease,
+        opacity 0.2s ease;
+    border-radius: 100px;
+    padding: 5px;
+    width: 20px !important;
+    height: 20px !important;
+    fill: rgba(0, 0, 0, 0.26) !important;
+}
+
+#settingsbutton svg:hover {
+    background: rgba(0, 0, 0, 0.06);
 }
 
 body.theme-dark #settingsbutton svg {
-    fill: rgba(255, 255, 255, 0.28) !important;
+    fill: rgba(255, 255, 255, 0.34) !important;
 }
 
 body.theme-dark #settingsbutton svg:hover {
@@ -29,93 +32,276 @@ body.theme-dark #settingsbutton svg:hover {
 #settingsui {
     z-index: 12;
     position: fixed;
-    display: flex;
-    left: 5px;
-    bottom: 50px;
-    background: rgba(245, 245, 245, 0.72);
+    top: 16px;
+    bottom: 16px;
+    left: 16px;
     display: flex;
     flex-direction: column;
-    padding: 10px;
-    border-radius: 10px;
-    border: solid 1px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(18px);
+    width: min(360px, calc(100vw - 32px));
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid rgba(20, 20, 24, 0.12);
+    border-radius: 16px;
+    background: rgba(244, 244, 244, 0.66);
+    backdrop-filter: blur(26px) saturate(1.08);
+    color: rgba(20, 20, 24, 0.9);
     opacity: 0;
-    transform: translateY(8px) scale(0.96);
-    transform-origin: bottom left;
-    filter: blur(8px);
+    transform: translateX(-16px) scale(0.98);
+    transform-origin: left center;
+    filter: blur(10px);
     pointer-events: none;
     transition:
-        opacity 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-        transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-        filter 0.22s ease;
-
-    h2 {
-        font-family: "Playfair Display";
-        font-weight: normal;
-    }
-    br {
-        height: 0px !important;
-    }
-    h4 {
-        margin-top: 10px;
-        font-family: "Nunito";
-        /* font-weight: normal; */
-    }
+        opacity 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+        filter 0.28s ease;
 }
 
 #settingsui.open {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(0) scale(1);
     filter: blur(0);
     pointer-events: all;
 }
 
 body.theme-dark #settingsui {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(12, 16, 28, 0.58);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.settingsPanelHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid rgba(20, 20, 24, 0.08);
+}
+
+body.theme-dark .settingsPanelHeader {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.settingsPanelHeader h2 {
+    margin: 0;
+    font-family: "Playfair Display";
+    font-size: 34px;
+    font-weight: normal;
+    line-height: 1;
+}
+
+.settingsPanelHeader p,
+.settingsSectionHeader p {
+    margin: 5px 0 0;
+    font-family: "Nunito";
+    font-size: 12px;
+    line-height: 1.35;
+    color: rgba(20, 20, 24, 0.5);
+}
+
+body.theme-dark .settingsPanelHeader p,
+body.theme-dark .settingsSectionHeader p {
+    color: rgba(255, 255, 255, 0.48);
+}
+
+.settingsClose {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.settingsClose:hover {
+    background: rgba(20, 20, 24, 0.07);
+}
+
+body.theme-dark .settingsClose:hover {
     background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.settingsClose svg {
+    width: 18px !important;
+    height: 18px !important;
+    fill: rgba(20, 20, 24, 0.5) !important;
+}
+
+body.theme-dark .settingsClose svg {
+    fill: rgba(255, 255, 255, 0.58) !important;
+}
+
+.settingsPanelBody {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0;
+    overflow-y: auto;
+    padding: 4px 0 18px;
+}
+
+.settingsSection {
+    padding: 16px 18px 18px;
+    border-bottom: 1px solid rgba(20, 20, 24, 0.08);
+}
+
+.settingsSection:last-child {
+    border-bottom: 0;
+}
+
+body.theme-dark .settingsSection {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.settingsSectionHeader {
+    margin-bottom: 12px;
+}
+
+.settingsSectionHeader h3 {
+    margin: 0;
+    font-family: "Nunito";
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: rgba(20, 20, 24, 0.72);
+    letter-spacing: 0;
+}
+
+body.theme-dark .settingsSectionHeader h3 {
+    color: rgba(255, 255, 255, 0.76);
 }
 
 .themeSwitch {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    margin-top: 6px;
+    gap: 6px;
 }
 
 .aiSwitch {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 4px;
-    margin-top: 6px;
+    gap: 6px;
 }
 
 .themeOption,
 .aiOption {
-    padding: 6px 10px;
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.34);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 38px;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    border: 1px solid rgba(20, 20, 24, 0.1);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.22);
     color: inherit;
     cursor: pointer;
     font-family: "Nunito";
+    font-size: 13px;
+    line-height: 1.15;
+    text-align: left;
+    transition:
+        background 0.16s ease,
+        border-color 0.16s ease;
+}
+
+.themeOption {
+    justify-content: center;
+    text-align: center;
 }
 
 .themeOption:hover,
+.aiOption:hover {
+    background: rgba(255, 255, 255, 0.42);
+}
+
 .themeOption.selected,
-.aiOption:hover,
 .aiOption.selected {
-    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(20, 20, 24, 0.28);
+    background: rgba(255, 255, 255, 0.62);
 }
 
 body.theme-dark .themeOption,
 body.theme-dark .aiOption {
     border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.07);
 }
 
 body.theme-dark .themeOption:hover,
+body.theme-dark .aiOption:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
 body.theme-dark .themeOption.selected,
-body.theme-dark .aiOption:hover,
 body.theme-dark .aiOption.selected {
+    border-color: rgba(255, 255, 255, 0.28);
     background: rgba(255, 255, 255, 0.18);
+}
+
+.optionTitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.optionMeta {
+    overflow: hidden;
+    max-width: 132px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(20, 20, 24, 0.45);
+}
+
+body.theme-dark .optionMeta {
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.rangeControl {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+    font-family: "Nunito";
+}
+
+.rangeLabel {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(20, 20, 24, 0.56);
+}
+
+body.theme-dark .rangeLabel {
+    color: rgba(255, 255, 255, 0.52);
+}
+
+.rangeControl input[type="range"] {
+    width: 100%;
+    accent-color: rgba(20, 20, 24, 0.72);
+}
+
+body.theme-dark .rangeControl input[type="range"] {
+    accent-color: rgba(255, 255, 255, 0.76);
+}
+
+@media (max-width: 520px) {
+    #settingsui {
+        top: 10px;
+        bottom: 10px;
+        left: 10px;
+        width: calc(100vw - 20px);
+        border-radius: 14px;
+    }
+
+    .settingsPanelHeader {
+        padding: 18px 16px 14px;
+    }
+
+    .settingsSection {
+        padding: 15px 16px 17px;
+    }
 }
