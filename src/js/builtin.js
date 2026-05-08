@@ -32,6 +32,16 @@ const AI_PROVIDERS = [
 ];
 
 const DEFAULT_AI_PROVIDER = "chatgpt";
+const DEFAULT_SEARCH_ENGINE = {
+  name: "Google",
+  url: "https://www.google.com/search?q={{{s}}}",
+};
+
+const getSearchEngine = () =>
+  window.LittleHomeSettings?.getSearchEngine?.() || DEFAULT_SEARCH_ENGINE;
+
+const getCustomBangs = () =>
+  window.LittleHomeSettings?.getCustomBangs?.() || [];
 
 const getAiProviderKey = () => {
   const stored = getFromStorage("ai_provider") || DEFAULT_AI_PROVIDER;
@@ -161,7 +171,11 @@ searcher = () => {
     const start = match.index + match[0].indexOf("!");
     const end = start + inputed.length + 1;
 
-    for (const bang of [...getAiProviderBangs(), ...bangs]) {
+    for (const bang of [
+      ...getAiProviderBangs(),
+      ...getCustomBangs(),
+      ...bangs,
+    ]) {
       if (bang.t == inputed)
         return {
           found: true,
@@ -183,7 +197,11 @@ searcher = () => {
 
   const getBangSuggestions = (inputed) => {
     const needle = inputed.toLowerCase();
-    const allBangs = [...getOrderedAiProviderBangs(), ...bangs];
+    const allBangs = [
+      ...getOrderedAiProviderBangs(),
+      ...getCustomBangs(),
+      ...bangs,
+    ];
     if (needle === "") return allBangs.slice(0, 8);
 
     return allBangs
@@ -333,7 +351,7 @@ searcher = () => {
   const getSearchUrl = (query, fb = findbang(query)) => {
     const url = fb.valid
       ? fb.data.u
-      : "https://www.google.com/search?q={{{s}}}";
+      : getSearchEngine().url;
 
     return url.replace(
       "{{{s}}}",
@@ -350,10 +368,10 @@ searcher = () => {
       ? `${query.slice(0, fb.start)}${query.slice(fb.end)}`.trim()
       : query.trim();
 
-  const createSearchSuggestion = (query, title = query, subtitle = "Search Google") => ({
+  const createSearchSuggestion = (query, title = query, subtitle = null) => ({
     type: "search",
     title,
-    subtitle,
+    subtitle: subtitle || `Search ${getSearchEngine().name}`,
     value: title,
     isPrimarySearch: title === query,
   });
@@ -385,7 +403,7 @@ searcher = () => {
       if (context.directUrl)
         return `open ${escapeHtml(getHost(context.directUrl))}`;
       return searchLabel(
-        context.fb?.valid ? context.fb.data.s : "Google",
+        context.fb?.valid ? context.fb.data.s : getSearchEngine().name,
         getCleanSearchQuery(context.query, context.fb),
       );
     }
@@ -408,8 +426,8 @@ searcher = () => {
       );
     }
     if (suggestion.type === "search")
-      return searchLabel("Google", suggestion.title);
-    return searchLabel("Google", context.query);
+      return searchLabel(getSearchEngine().name, suggestion.title);
+    return searchLabel(getSearchEngine().name, context.query);
   };
 
   const updateSearchSubtitle = () => {
@@ -763,7 +781,7 @@ searcher = () => {
     const h1 = document.querySelector("#searchContent > h1");
     const p = document.querySelector("#searchContent > p");
     h1.innerHTML = "";
-    p.innerHTML = searchLabel("Google", "");
+    p.innerHTML = searchLabel(getSearchEngine().name, "");
   };
 
   const runSuggestion = (suggestion) => {

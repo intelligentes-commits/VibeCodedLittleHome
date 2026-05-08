@@ -1,4 +1,9 @@
 body {
+    --solid_bg_color: #e8e8e8;
+    --custom_bg_image: none;
+    --custom_gradient_from: #e8e8e8;
+    --custom_gradient_to: #b9c2ff;
+    --custom_gradient_angle: 135deg;
     display: flex;
     height: 100vh;
     width: 100vw;
@@ -21,6 +26,8 @@ body {
     width: 100vw;
     opacity: 1;
     background: #e8e8e8;
+    background-position: center;
+    background-size: cover;
 }
 
 #background.changing {
@@ -152,12 +159,46 @@ body.theme-dark {
     color: #fff;
 }
 
-body.theme-dark #background {
+body.bg-solid #background {
+    background: var(--solid_bg_color);
+}
+
+body.bg-image #background {
+    background-color: var(--solid_bg_color);
+    background-image: var(--custom_bg_image);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+body.bg-gradient #background {
+    background: linear-gradient(
+        var(--custom_gradient_angle),
+        var(--custom_gradient_from),
+        var(--custom_gradient_to)
+    );
+}
+
+body.clock-disabled #clock,
+body.clock-disabled #idleHint {
+    display: none !important;
+}
+
+body.no-animations *,
+body.no-animations *::before,
+body.no-animations *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+}
+
+body.theme-dark.bg-default #background {
     --base_bg_color_tint_p: calc(var(--base_bg_color) + var(--base_bg_color_range));
     --base_bg_color_tint_n: calc(var(--base_bg_color) - var(--base_bg_color_range));
-    --c-0-base: hsla(var(--base_bg_color), calc(var(--base_bg_saturation) - 9%), 12%, 1);
-    --c-1-base: hsla(var(--base_bg_color_tint_p), calc(var(--base_bg_saturation) - 8%), 12%, 1);
-    --c-3-base: hsla(var(--base_bg_color_tint_n), calc(var(--base_bg_saturation) - 6%), 36%, 1);
+    --c-0-base: hsla(var(--base_bg_color), calc(var(--base_bg_saturation) - 9%), var(--base_bg_brightness), 1);
+    --c-1-base: hsla(var(--base_bg_color_tint_p), calc(var(--base_bg_saturation) - 8%), calc(var(--base_bg_brightness) + 10%), 1);
+    --c-3-base: hsla(var(--base_bg_color_tint_n), calc(var(--base_bg_saturation) - 6%), calc(var(--base_bg_brightness) + 24%), 1);
     --x-0: 85%;
     --y-0: 80%;
     --s-start-0: 9%;
