@@ -233,6 +233,8 @@ searcher = () => {
   var renderedSuggestions = [];
   var suggestionRequest = 0;
   var searchContext = { query: "", fb: null, directUrl: null };
+  var tabsCache = [];
+  var tabsCacheAt = 0;
 
   const suggestionsEl = $.div({ id: "searchSuggestions", class: "hidden" });
   document.querySelector("#searchContent").appendChild(suggestionsEl);
@@ -296,6 +298,16 @@ searcher = () => {
   const includesQuery = (value, query) =>
     (value || "").toLowerCase().includes(query.toLowerCase());
 
+  const getTabsCached = async () => {
+    const now = Date.now();
+    if (tabsCache.length > 0 && now - tabsCacheAt < 2000) return tabsCache;
+
+    const tabs = await extensionCall("tabs", extensionApi?.tabs, "query", {});
+    tabsCache = tabs;
+    tabsCacheAt = Date.now();
+    return tabsCache;
+  };
+
   const highlightMatch = (value, query) => {
     const text = value || "";
     const needle = query.trim();
@@ -336,6 +348,14 @@ searcher = () => {
     fb.found
       ? `${query.slice(0, fb.start)}${query.slice(fb.end)}`.trim()
       : query.trim();
+
+  const createSearchSuggestion = (query, title = query, subtitle = "Search Google") => ({
+    type: "search",
+    title,
+    subtitle,
+    value: title,
+    isPrimarySearch: title === query,
+  });
 
   const isAiBang = (bang) => Boolean(bang?.aiProviderKey);
 
@@ -431,7 +451,7 @@ searcher = () => {
 
   const uniqueSuggestions = (suggestions) => {
     const seen = new Set();
-    return suggestions
+    const unique = suggestions
       .filter(Boolean)
       .filter((suggestion) => {
         const key = suggestion.url || `${suggestion.type}:${suggestion.title}`;
@@ -440,6 +460,20 @@ searcher = () => {
         return true;
       })
       .slice(0, 8);
+
+    const primarySearch = suggestions.find(
+      (suggestion) => suggestion?.type === "search" && suggestion.isPrimarySearch,
+    );
+    if (!primarySearch || unique.includes(primarySearch)) return unique;
+
+    const replaceIndex = unique.findIndex((suggestion) => suggestion.type === "history");
+    if (replaceIndex !== -1) {
+      unique[replaceIndex] = primarySearch;
+      return unique;
+    }
+
+    if (unique.length < 8) return [...unique, primarySearch];
+    return [...unique.slice(0, 7), primarySearch];
   };
 
   const getLocalSuggestions = async (query, fb, directUrl) => {
@@ -454,7 +488,7 @@ searcher = () => {
     }
 
     const [tabs, bookmarks, history] = await Promise.all([
-      extensionCall("tabs", extensionApi?.tabs, "query", {}),
+      getTabsCached(),
       extensionCall("bookmarks", extensionApi?.bookmarks, "search", query),
       extensionCall("history", extensionApi?.history, "search", {
         text: query,
@@ -463,7 +497,22 @@ searcher = () => {
       }),
     ]);
 
-    const filteredTabs = tabs
+    return [
+      ...getTabSuggestions(tabs, query),
+      directUrl && {
+        type: "url",
+        title: getHost(directUrl),
+        subtitle: "Open URL",
+        url: directUrl,
+      },
+      createSearchSuggestion(query),
+      ...getBookmarkSuggestions(bookmarks),
+      ...getHistorySuggestions(history),
+    ].filter(Boolean);
+  };
+
+  const getTabSuggestions = (tabs, query) =>
+    tabs
       .filter(
         (tab) =>
           includesQuery(tab.title, query) || includesQuery(tab.url, query),
@@ -478,9 +527,10 @@ searcher = () => {
         windowId: tab.windowId,
       }));
 
-    const filteredBookmarks = bookmarks
+  const getBookmarkSuggestions = (bookmarks) =>
+    bookmarks
       .filter((bookmark) => bookmark.url)
-      .slice(0, 4)
+      .slice(0, 2)
       .map((bookmark) => ({
         type: "bookmark",
         title: bookmark.title || bookmark.url,
@@ -488,28 +538,16 @@ searcher = () => {
         url: bookmark.url,
       }));
 
-    const filteredHistory = history
+  const getHistorySuggestions = (history) =>
+    history
       .filter((item) => item.url)
-      .slice(0, 4)
+      .slice(0, 3)
       .map((item) => ({
         type: "history",
         title: item.title || item.url,
         subtitle: `History - ${getHost(item.url)}`,
         url: item.url,
       }));
-
-    return uniqueSuggestions([
-      ...filteredTabs,
-      directUrl && {
-        type: "url",
-        title: getHost(directUrl),
-        subtitle: "Open URL",
-        url: directUrl,
-      },
-      ...filteredBookmarks,
-      ...filteredHistory,
-    ]);
-  };
 
   const getImmediateSuggestions = (query, fb, directUrl) => {
     if (query === "") return [];
@@ -523,18 +561,14 @@ searcher = () => {
     }
 
     return uniqueSuggestions([
+      ...getTabSuggestions(tabsCache, query),
       directUrl && {
         type: "url",
         title: getHost(directUrl),
         subtitle: "Open URL",
         url: directUrl,
       },
-      {
-        type: "search",
-        title: query,
-        subtitle: "Search Google",
-        value: query,
-      },
+      createSearchSuggestion(query),
     ]);
   };
 
@@ -552,12 +586,10 @@ searcher = () => {
     const searchTerms = Array.isArray(searchResponse[1])
       ? searchResponse[1]
       : [];
-    return searchTerms.slice(0, 5).map((term) => ({
-      type: "search",
-      title: term,
-      subtitle: "Google suggestion",
-      value: term,
-    }));
+    return searchTerms
+      .filter((term) => term.toLowerCase() !== query.toLowerCase())
+      .slice(0, 5)
+      .map((term) => createSearchSuggestion(query, term, "Google suggestion"));
   };
 
   const getBrowserSuggestions = async (query, fb, directUrl) => {
@@ -758,10 +790,39 @@ searcher = () => {
 
     if (fb.found) return;
 
-    getLocalSuggestions(query, fb, directUrl).then((localSuggestions) => {
+    getTabsCached().then((tabs) => {
       if (requestId === suggestionRequest) {
         renderSuggestions(
-          uniqueSuggestions([...localSuggestions, ...immediateSuggestions]),
+          uniqueSuggestions([
+            ...getTabSuggestions(tabs, query),
+            ...renderedSuggestions,
+          ]),
+        );
+      }
+    });
+
+    extensionCall("bookmarks", extensionApi?.bookmarks, "search", query).then((bookmarks) => {
+      if (requestId === suggestionRequest) {
+        renderSuggestions(
+          uniqueSuggestions([
+            ...renderedSuggestions,
+            ...getBookmarkSuggestions(bookmarks),
+          ]),
+        );
+      }
+    });
+
+    extensionCall("history", extensionApi?.history, "search", {
+      text: query,
+      maxResults: 12,
+      startTime: 0,
+    }).then((history) => {
+      if (requestId === suggestionRequest) {
+        renderSuggestions(
+          uniqueSuggestions([
+            ...renderedSuggestions,
+            ...getHistorySuggestions(history),
+          ]),
         );
       }
     });

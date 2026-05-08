@@ -48,6 +48,11 @@
     transition: margin-top 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+#searcher::after {
+    content: "";
+    flex: 0 0 620px;
+}
+
 #searchContent > h1 {
     font-family: "Playfair Display";
     font-weight: normal;
@@ -132,7 +137,7 @@ body.theme-dark #searchContent > h1 > span.placeholder {
     opacity: 0;
     pointer-events: none;
     filter: blur(10px);
-    transform: translateX(-50%) translateY(-18px) scale(0.92);
+    transform: translateX(-50%) translateY(8px) scale(0.96);
 }
 
 .searchSuggestion {
