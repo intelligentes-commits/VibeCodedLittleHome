@@ -135,6 +135,7 @@ body.theme-dark #searchContent > h1 > span.placeholder {
     left: 50%;
     width: min(620px, calc(100vw - 48px));
     display: grid;
+    grid-auto-rows: 52px;
     align-content: start;
     gap: 0;
     font-family: "Nunito";
@@ -167,8 +168,10 @@ body.theme-dark #searchContent > h1 > span.placeholder {
     align-items: center;
     gap: 12px;
     width: 100%;
+    height: 52px;
     min-height: 52px;
     padding: 10px 14px;
+    box-sizing: border-box;
     border: 0;
     border-bottom: 1px solid rgba(20, 20, 24, 0.08);
     border-radius: 0;
