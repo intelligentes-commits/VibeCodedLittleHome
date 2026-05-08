@@ -7,6 +7,7 @@
 }
 
 #searcher {
+    --query-lift: 0px;
     background: transparent;
     transition: opacity 0.2s;
     opacity: 0;
@@ -16,10 +17,14 @@
     z-index: 5;
     height: 100vh;
     width: 100vw;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 80px 24px 160px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 15px;
     transition:
         opacity 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -39,16 +44,21 @@
     flex-direction: column;
     align-items: center;
     gap: 15px;
+    margin-top: max(0px, calc((100vh - 576px) / 2 - var(--query-lift)));
+    transition: margin-top 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 #searchContent > h1 {
     font-family: "Playfair Display";
     font-weight: normal;
     font-size: 60px;
+    max-width: min(1040px, calc(100vw - 48px));
     text-align: center;
     /* анимацию менять тута */
     transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.05;
 }
 
 #searchContent > h1.no-transition {
@@ -69,8 +79,24 @@
     background: rgba(255, 100, 100, 0.2);
 }
 
+#searchContent > h1 > span.placeholder {
+    color: rgba(0, 0, 0, 0.34);
+    font-family: "Playfair Display";
+    font-size: 60px;
+    font-weight: normal;
+}
+
+body.theme-dark #searchContent > h1 > span.placeholder {
+    color: rgba(255, 255, 255, 0.34);
+}
+
 #searchContent > p {
     font-family: "Nunito";
+    max-width: min(1040px, calc(100vw - 48px));
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 #searchContent > p strong {

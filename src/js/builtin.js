@@ -692,11 +692,13 @@ searcher = () => {
     const clockEl = document.querySelector("#clock");
     const idleHintEl = document.querySelector("#idleHint");
     const searchEl = document.querySelector("#searcher");
+    const searchContentEl = document.querySelector("#searchContent");
 
     if (query === "") {
       clockEl.classList.remove("hidden");
       idleHintEl?.classList.remove("hidden");
       searchEl.classList.remove("active");
+      searchEl.style.setProperty("--query-lift", "0px");
       renderSuggestions([]);
     } else {
       clockEl.classList.add("hidden");
@@ -708,7 +710,10 @@ searcher = () => {
     searchContext = { query, fb, directUrl: null };
     let displayQuery = escapeHtml(query);
     if (isAiSearchMode(fb)) {
-      displayQuery = escapeHtml(getCleanSearchQuery(query, fb));
+      const aiQuery = getCleanSearchQuery(query, fb);
+      displayQuery = aiQuery
+        ? escapeHtml(aiQuery)
+        : `<span class="placeholder">начните печатать</span>`;
     } else if (fb.found) {
       displayQuery = `${escapeHtml(query.slice(0, fb.start))}<span class="${
         fb.valid ? "" : "error"
@@ -737,6 +742,15 @@ searcher = () => {
       h1.style.transform = `translateX(0)`;
     } else {
       h1.style.transform = `translateX(0)`;
+    }
+
+    const lineHeight = parseFloat(getComputedStyle(h1).lineHeight) || h1.offsetHeight;
+    const lineCount = Math.max(1, Math.round(h1.offsetHeight / lineHeight));
+    const maxLift = Math.max(180, Math.round(window.innerHeight * 0.45));
+    const lift = Math.min(maxLift, Math.max(0, lineCount - 1) * 30);
+    searchEl.style.setProperty("--query-lift", `${lift}px`);
+    if (searchEl.scrollTop > searchContentEl.offsetTop) {
+      searchEl.scrollTo({ top: searchContentEl.offsetTop, behavior: "smooth" });
     }
 
     const immediateSuggestions = getImmediateSuggestions(query, fb, directUrl);
