@@ -91,7 +91,7 @@
     transition: none !important;
 }
 
-#searchContent > h1 > span {
+#searchContent > h1 .bangToken {
     transition: background 0.2s;
     font-size: 23px;
     font-family: "Fira Code";
@@ -101,18 +101,20 @@
     vertical-align: middle;
 }
 
-#searchContent > h1 > span.error {
+#searchContent > h1 .bangToken.error {
     background: rgba(255, 100, 100, 0.2);
 }
 
-#searchContent > h1 > span.placeholder {
+#searchContent > h1 > span.placeholder,
+#searchContent > h1 > .queryLine.placeholder {
     color: rgba(0, 0, 0, 0.34);
     font-family: "Playfair Display";
     font-size: 60px;
     font-weight: normal;
 }
 
-body.theme-dark #searchContent > h1 > span.placeholder {
+body.theme-dark #searchContent > h1 > span.placeholder,
+body.theme-dark #searchContent > h1 > .queryLine.placeholder {
     color: rgba(255, 255, 255, 0.34);
 }
 

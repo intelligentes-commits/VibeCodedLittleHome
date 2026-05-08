@@ -358,6 +358,14 @@ searcher = () => {
     isPrimarySearch: title === query,
   });
 
+  const createDirectUrlSuggestion = (directUrl) =>
+    directUrl && {
+      type: "url",
+      title: getHost(directUrl),
+      subtitle: "Open URL",
+      url: directUrl,
+    };
+
   const isAiBang = (bang) => Boolean(bang?.aiProviderKey);
 
   const isAiSearchMode = (fb) => aiMode && fb?.valid && isAiBang(fb.data);
@@ -449,6 +457,8 @@ searcher = () => {
 
     const lines = [];
     let line = "";
+    let lineStart = 0;
+    let index = 0;
 
     for (const char of Array.from(text)) {
       const nextLine = `${line}${char}`;
@@ -456,18 +466,45 @@ searcher = () => {
         line !== "" &&
         getTextMeasureContext.measureText(nextLine).width > maxWidth
       ) {
-        lines.push(line);
-        line = char.trimStart();
+        lines.push({ text: line, start: lineStart, end: index });
+        if (char === " ") {
+          line = "";
+          lineStart = index + 1;
+        } else {
+          line = char;
+          lineStart = index;
+        }
       } else {
         line = nextLine;
       }
+      index += char.length;
     }
 
-    if (line !== "") lines.push(line);
-    return lines.length > 0 ? lines : [""];
+    if (line !== "") {
+      lines.push({ text: line, start: lineStart, end: text.length });
+    }
+    return lines.length > 0 ? lines : [{ text: "", start: 0, end: 0 }];
   };
 
-  const renderQueryLines = (h1, text, { placeholder = false } = {}) => {
+  const renderHighlightedLine = (line, highlight) => {
+    if (!highlight) return escapeHtml(line.text);
+
+    const start = Math.max(line.start, highlight.start);
+    const end = Math.min(line.end, highlight.end);
+    if (start >= end) return escapeHtml(line.text);
+
+    const localStart = start - line.start;
+    const localEnd = end - line.start;
+    return `${escapeHtml(line.text.slice(0, localStart))}<span class="${highlight.className}">${escapeHtml(
+      line.text.slice(localStart, localEnd),
+    )}</span>${escapeHtml(line.text.slice(localEnd))}`;
+  };
+
+  const renderQueryLines = (
+    h1,
+    text,
+    { placeholder = false, highlight = null } = {},
+  ) => {
     h1.innerHTML = "";
     splitQueryLines(text, h1).forEach((line) => {
       h1.appendChild(
@@ -475,7 +512,7 @@ searcher = () => {
           {
             class: `queryLine${placeholder ? " placeholder" : ""}`,
           },
-          escapeHtml(line),
+          renderHighlightedLine(line, highlight),
         ),
       );
     });
@@ -499,7 +536,10 @@ searcher = () => {
     const unique = suggestions
       .filter(Boolean)
       .filter((suggestion) => {
-        const key = suggestion.url || `${suggestion.type}:${suggestion.title}`;
+        const key =
+          suggestion.type === "tab"
+            ? `tab:${suggestion.tabId || suggestion.url}`
+            : suggestion.url || `${suggestion.type}:${suggestion.title}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
@@ -543,13 +583,8 @@ searcher = () => {
     ]);
 
     return [
+      createDirectUrlSuggestion(directUrl),
       ...getTabSuggestions(tabs, query),
-      directUrl && {
-        type: "url",
-        title: getHost(directUrl),
-        subtitle: "Open URL",
-        url: directUrl,
-      },
       createSearchSuggestion(query),
       ...getBookmarkSuggestions(bookmarks),
       ...getHistorySuggestions(history),
@@ -606,14 +641,29 @@ searcher = () => {
     }
 
     return uniqueSuggestions([
+      createDirectUrlSuggestion(directUrl),
       ...getTabSuggestions(tabsCache, query),
-      directUrl && {
-        type: "url",
-        title: getHost(directUrl),
-        subtitle: "Open URL",
-        url: directUrl,
-      },
       createSearchSuggestion(query),
+    ]);
+  };
+
+  const mergeTabSuggestions = (tabs, query, directUrl) => {
+    const tabSuggestions = getTabSuggestions(tabs, query);
+    if (!directUrl) {
+      return uniqueSuggestions([...tabSuggestions, ...renderedSuggestions]);
+    }
+
+    const directIndex = renderedSuggestions.findIndex(
+      (suggestion) => suggestion.type === "url" && suggestion.url === directUrl,
+    );
+    if (directIndex === -1) {
+      return uniqueSuggestions([...tabSuggestions, ...renderedSuggestions]);
+    }
+
+    return uniqueSuggestions([
+      ...renderedSuggestions.slice(0, directIndex + 1),
+      ...tabSuggestions,
+      ...renderedSuggestions.slice(directIndex + 1),
     ]);
   };
 
@@ -810,6 +860,7 @@ searcher = () => {
     let displayQuery = escapeHtml(query);
     let queryLineText = null;
     let queryLinePlaceholder = false;
+    let queryLineHighlight = null;
     if (isAiSearchMode(fb)) {
       const aiQuery = getCleanSearchQuery(query, fb);
       displayQuery = aiQuery
@@ -818,11 +869,12 @@ searcher = () => {
       queryLineText = aiQuery || "начните печатать";
       queryLinePlaceholder = aiQuery === "";
     } else if (fb.found) {
-      displayQuery = `${escapeHtml(query.slice(0, fb.start))}<span class="${
-        fb.valid ? "" : "error"
-      }">${escapeHtml(query.slice(fb.start, fb.end))}</span>${escapeHtml(
-        query.slice(fb.end),
-      )}`;
+      queryLineText = query;
+      queryLineHighlight = {
+        start: fb.start,
+        end: fb.end,
+        className: `bangToken${fb.valid ? "" : " error"}`,
+      };
     } else {
       queryLineText = query;
     }
@@ -841,6 +893,7 @@ searcher = () => {
     } else {
       renderQueryLines(h1, queryLineText, {
         placeholder: queryLinePlaceholder,
+        highlight: queryLineHighlight,
       });
     }
     p.innerHTML = getSuggestionLabel(null, searchContext);
@@ -876,12 +929,7 @@ searcher = () => {
 
     getTabsCached().then((tabs) => {
       if (requestId === suggestionRequest) {
-        renderSuggestions(
-          uniqueSuggestions([
-            ...getTabSuggestions(tabs, query),
-            ...renderedSuggestions,
-          ]),
-        );
+        renderSuggestions(mergeTabSuggestions(tabs, query, directUrl));
       }
     });
 
